@@ -10,6 +10,7 @@ using KrylovKit
 using Dates
 using TensorCast
 
+export peps,make_finite2,calc_env,iterate_ctmrg,partition_function,free_energy,transfer_matrix_eigenvalues,corr_function,average
 
 mutable struct peps
     E::Array{ITensor}

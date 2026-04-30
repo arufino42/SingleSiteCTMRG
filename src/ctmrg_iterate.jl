@@ -323,19 +323,6 @@ function calc_env(net::peps)
     net.env = ((net.C[1]*net.E[1])*(net.C[2]*net.E[2]))*((net.C[3]*net.E[3])*(net.C[4]*net.E[4]))
 end
 
-function partition_function(net::peps)
-    return (net.env*net.A)[]
-end
-
-function free_energy(net::peps)
-    z1=partition_function(net)
-    z2=(net.C[1]*replaceind(net.C[2],net.alpha[2],net.alpha[1])*replaceind(net.C[3],net.beta[3],net.beta[2])*replaceinds(net.C[4],[net.alpha[4],net.beta[4]],[net.alpha[3],net.beta[1]]))[]
-    z3=(net.C[1]*net.E[1]*net.C[2]*replaceind(net.C[3],net.beta[3],net.beta[2])*replaceind(net.E[3],net.i[3],net.i[1])*replaceind(net.C[4],net.beta[4],net.beta[1]))[]
-    z4=(net.C[1]*net.E[4]*net.C[4]*replaceind(net.C[2],net.alpha[2],net.alpha[1])*replaceind(net.E[2],net.i[2],net.i[4])*replaceind(net.C[3],net.alpha[3],net.alpha[4]))[]
-    return log(abs(z1*z2/(z3*z4)))
-end
-
-
 function make_finite2(net::peps)
     # calc_env(net)
     maxVal=[]
