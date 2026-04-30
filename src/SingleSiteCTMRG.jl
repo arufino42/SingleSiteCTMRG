@@ -32,5 +32,13 @@ end
 # Utilities
 include("utils.jl")
 
+# Transfer-Matrix related functions
+include("transfer_matrix.jl")
+
+# Heart of the CTMRG algorithm
+include("ctmrg_iterate.jl")
+
+# Code for calculating observables
+include("observables.jl")
 
 end # module SingleSiteCTMRG

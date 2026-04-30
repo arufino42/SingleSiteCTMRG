@@ -17,3 +17,19 @@ function unbundle_indices(T::ITensor,i1::Index, i2::Index, k::Index)
     outT = ITensor(nArray,indSet...,i1,i2)
     return outT
 end
+
+
+function singular_values(curNet,i,nvals=20)
+    vals,vecs,info= svdsolve(array(curNet.C[i]),nvals,:LR,tol=1e-20,krylovdim=nvals+1)
+    return vals
+end
+
+
+function convergence_measure(net::peps)
+    Psi= net.C[2]*net.E[2]*net.C[3]
+    Psi2=Psi*net.E[1]*net.A*net.E[3]
+    R1=(replaceinds(Psi,[net.alpha[2],net.i[2],net.alpha[3]],[net.alpha[1],net.i[4],net.alpha[4]])*Psi2)[]
+    R2=(Psi*Psi)[]
+    @show R1/R2
+    return R1/R2;
+end
