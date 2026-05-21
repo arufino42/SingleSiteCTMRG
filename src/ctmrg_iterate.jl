@@ -170,7 +170,7 @@ function extend_left_corboz(net::peps,method)
     F=svd(R1*R2,alg = LinearAlgebra.DivideAndConquer())
     # @show F.S
     # @show F
-    cutInd=findfirst(x->abs(x/first(F.S))<=big"2."^(-precision(typeof(first(F.S)))),F.S)
+    cutInd=findfirst(x->abs(x/first(F.S))<=16*eps(typeof(F.S[1])),F.S)
     # @show F.S
     # @show b*d
     # @show cutInd
