@@ -19,7 +19,7 @@ using KrylovKit
 using Dates
 using TensorCast
 
-export peps,make_finite,calc_env,iterate_ctmrg,partition_function,free_energy,transfer_matrix_eigenvalues,corr_function,average,form_factors,sample_configuration
+export peps,make_finite,calc_env,iterate_ctmrg,partition_function,free_energy,transfer_matrix_eigenvalues,corr_function,average,form_factors,sample_configuration,entanglement_entropy
 
 """
     peps

@@ -1,6 +1,6 @@
 # SingleSiteCTMRG.jl
 
-SingleSiteCTMRG is a julia implementation the corner transfer matrix renormalization group ([CTMRG](https://doi.org/10.1143/JPSJ.65.891)) method for the approximate contraction of an infinite translationally invariant square tensor network.
+SingleSiteCTMRG is a julia implementation the corner transfer matrix renormalization group ([CTMRG](https://doi.org/10.1143/JPSJ.65.891)) method for the approximate contraction of an infinite translationally-invariant square tensor network.
 It uses ITensors.jl to represent four corner tensors and four edge tensors,
 with a maximum environment bond dimension `chi`.
 
@@ -63,16 +63,16 @@ use. `env` is a cached contraction populated by `calc_env`; `M` and
 See `examples/` for examples of implementations of CTMRG on the square and triangular lattices, as well as for usage of the snapshot sampling.
 
 ## Update methods and measurements
+The choice of the projectors in the CTMRG renormalization step often differs from author to author. Our usage experience indicates that the convergence properties of CTMRG may be depend on the projector chosen, so the update method can be chosen by the user.
 
-| Method symbol | Update | Second return value |
-|:--|:--|:--|
-| `:symmetricOrus` | All four directions together | Tuple of four SVD spectra |
-| `:symmetricNishino` | All four directions together | Tuple of four SVD spectra |
-| `:directionalOrus` | Right, down, left, up | Four full left singular-vector matrices |
-| `:directionalNishino` | Right, down, left, up | Four full left singular-vector matrices |
-| `:directionalCorboz` | Right, down, left, up | Four SVD spectra |
+| Method symbol | Update | 
+|:--|:--|
+| `:symmetricOrus` | All four directions updated simultaneously. Projector defined in [Orús and Vidal 2009](https://link.aps.org/doi/10.1103/PhysRevB.80.094403). |
+| `:symmetricNishino` | All four directions updated simultaneously. Projector defined in [Nishino and Okunishi 1996](https://journals.jps.jp/doi/10.1143/JPSJ.65.891). |
+| `:directionalOrus` | Directional moves done in sequence right, down, left, up. Projector defined in [Orús and Vidal 2009](https://link.aps.org/doi/10.1103/PhysRevB.80.094403).
+| `:directionalNishino` | Directional moves done in sequence right, down, left, up. Projector  defined in [Nishino and Okunishi 1996](https://journals.jps.jp/doi/10.1143/JPSJ.65.891).
+| `:directionalCorboz` | Directional moves done in sequence right, down, left, up. Projector  defined in [Corboz et al. 2014](https://doi.org/10.1103/PhysRevLett.113.046402).
 
-These diagnostics are untruncated and are not interchangeable between methods.
 Each call performs one growth step; there is no built-in convergence loop.
 `make_finite` rescales each corner and edge by its maximum absolute entry and
 returns those eight divisors. All boundary tensors must be nonzero.
