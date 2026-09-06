@@ -1,5 +1,13 @@
 using Random
 
+"""
+    sample(vProb::Array{Float64}, Nsamples=1) -> Vector
+
+Draw configuration indices from a nonempty probability array using the
+default RNG. Probabilities must be finite, nonnegative, and sum to one within
+`1e-6`; only the sum is checked. Returns a vector even for one draw.
+Internal helper.
+"""
 function sample(vProb::Array{Float64},Nsamples=1)
     N=length(vProb)
     if abs(sum(vProb)-1)>=1e-6
@@ -22,6 +30,13 @@ function sample(vProb::Array{Float64},Nsamples=1)
 end
 
 
+"""
+    snapshot_first_row(net::peps, proj_U, proj_R, proj_D, proj_L, Lx) -> Vector
+
+Sample the first row of `Lx >= 1` configuration labels from left to right,
+starting with the cached environment. Projector lists follow
+[`sample_configuration`](@ref). Requires current `net.env`. Internal helper.
+"""
 function snapshot_first_row(net::peps,proj_U,proj_R,proj_D,proj_L,Lx)
     row_config=[]
     vProb=Float64[]
@@ -73,6 +88,14 @@ function snapshot_first_row(net::peps,proj_U,proj_R,proj_D,proj_L,Lx)
 end
 
 
+"""
+    initialise_Bt(net::peps, prev_row, proj_U, proj_R, proj_D, proj_L) -> ITensor
+
+Contract the upper boundary conditioned on the nonempty sampled `prev_row`,
+relabeling remaining boundary indices for the next row. Projector lists
+follow [`sample_configuration`](@ref). Returns an unnormalized tensor
+without modifying `net`. Internal helper.
+"""
 function initialise_Bt(net::peps,prev_row,proj_U,proj_R,proj_D,proj_L)
     Lx=length(prev_row)
     Bt=net.C[1]*net.E[4]*proj_L[prev_row[1]]
@@ -88,6 +111,16 @@ function initialise_Bt(net::peps,prev_row,proj_U,proj_R,proj_D,proj_L)
 end
 
 
+"""
+    snapshot_next_row(net::peps, prev_row, Bt::ITensor,
+                      proj_U, proj_R, proj_D, proj_L) -> Vector
+
+Sample the next row conditioned on `prev_row` and accumulated upper boundary
+`Bt`. Build right boundary contractions, then draw labels from left to right.
+The width is `length(prev_row)` and must be positive. Projector lists follow
+[`sample_configuration`](@ref). The caller updates `Bt` separately.
+Internal helper.
+"""
 function snapshot_next_row(net::peps,prev_row,Bt::ITensor,proj_U,proj_R,proj_D,proj_L)
     vBr=[]
     n_confs=length(proj_U)
@@ -144,6 +177,28 @@ function snapshot_next_row(net::peps,prev_row,Bt::ITensor,proj_U,proj_R,proj_D,p
 end
 
 
+"""
+    sample_configuration(curNet::peps, Lx, Ly, proj_U, proj_R, proj_D, proj_L)
+
+Sample a rectangular patch from a converged CTMRG environment. Return an
+`Lx`-by-`Ly` integer matrix of configuration labels indexed as `[x, y]`,
+with positive integer dimensions. Map labels to model degrees of freedom
+in caller code. Rows are sampled sequentially, conditioned on earlier choices.
+
+Each of the four equally long lists contains rank-one ITensors on
+`curNet.i[1]`, `curNet.i[2]`, `curNet.i[3]`, `curNet.i[4]`, respectively.
+For configuration `k`, `rho_k = proj_U[k]*proj_R[k]*proj_D[k]*proj_L[k]`
+contains the full local statistical weight. Require
+`sum(rho_k for k) == curNet.A`, compatible overlap matching between neighbors,
+and real nonnegative conditional probabilities. Include the weight once
+across the four factors.
+
+Call [`calc_env`](@ref) first. Uses `Float64` probabilities and the default
+RNG; prints row numbers and timing after the first row. The internal sampler
+requires probabilities to sum to one within `1e-6`.
+See Sec. S1, Eqs. (S1)-(S2), of the supplementary information to
+[Rufino et al. (2026)](https://arxiv.org/html/2505.05889v2#S1a).
+"""
 function sample_configuration(curNet::peps,Lx,Ly,proj_U,proj_R,proj_D,proj_L)
     rand_conf=Array{Int,2}(undef,Lx,Ly)
     first_row=snapshot_first_row(curNet,proj_U,proj_R,proj_D,proj_L,Lx)

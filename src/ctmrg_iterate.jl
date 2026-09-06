@@ -1,4 +1,13 @@
 
+"""
+    extend_left(net::peps, method) -> (net, U)
+
+Absorb a column into the left boundary using `:directionalOrus` or
+`:directionalNishino`. Mutates the left corners, edge, and indices, retaining
+at most `net.chi` states. Returns the same state and the full left
+singular-vector matrix `U`, not singular values. Does not normalize tensors
+or refresh `net.env`. Internal helper.
+"""
 function extend_left(net::peps,method)
     nC1 = net.E[1]*net.C[1]
     nC4 = net.E[3]*net.C[4]
@@ -53,6 +62,15 @@ function extend_left(net::peps,method)
 end
 
 
+"""
+    extend_symmetric(net::peps, method) -> (s1, s2, s3, s4)
+
+Grow all corners and edges together using `:symmetricOrus` or
+`:symmetricNishino`. Mutates `net`, retaining at most `net.chi` states,
+and returns the four untruncated SVD spectra. Assumes equal local dimensions
+and a common boundary dimension for reshaping. Does not normalize tensors
+or refresh `net.env`. Internal helper.
+"""
 function extend_symmetric(net::peps,method)
     d=dim(net.i[1])
     b=dim(net.alpha[1])
@@ -143,6 +161,15 @@ function extend_symmetric(net::peps,method)
 end
 
 
+"""
+    extend_left_corboz(net::peps, method) -> (net, singular_values)
+
+Grow the left boundary with projectors from the SVD of two enlarged half
+environments. Mutates `net` and returns its full singular-value vector.
+`method` is accepted for the directional interface but is not inspected.
+Assumes compatible equal dimensions for reshaping; does not normalize tensors
+or refresh `net.env`. Internal helper for `:directionalCorboz`.
+"""
 function extend_left_corboz(net::peps,method)
     d=dim(net.i[1])
     b=dim(net.beta[1])
@@ -200,6 +227,14 @@ function extend_left_corboz(net::peps,method)
 end
 
 
+"""
+    rotate_left(net1::peps) -> peps
+
+Return a state with boundary and local-index labels rotated counterclockwise
+by a quarter turn: new directions `1:4` are old directions `(2, 3, 4, 1)`.
+Tensor objects are shared with `net1`; this is not a deep copy. The bulk
+tensor and cached fields are carried over. Internal helper.
+"""
 function rotate_left(net1::peps)
     net2=peps(net1.chi)
     net2.C[1]=net1.C[2]
@@ -230,6 +265,14 @@ function rotate_left(net1::peps)
 end
 
 
+"""
+    vertical_reflection(net1::peps) -> peps
+
+Return a state reflected about the vertical axis, exchanging left and right
+edges and the corresponding corners and index labels. Tensor objects are
+shared with `net1`; the bulk tensor and cached fields are carried over.
+This is a relabeling, not a deep copy. Internal helper.
+"""
 function vertical_reflection(net1::peps)
     net2=peps(net1.chi)
     net2.C[1]=net1.C[2]
@@ -260,6 +303,28 @@ function vertical_reflection(net1::peps)
 end
 
 
+"""
+    iterate_ctmrg(net::peps, method) -> (net, diagnostics)
+
+Perform one CTMRG growth step with maximum boundary dimension `net.chi`.
+Supported methods and their diagnostics are:
+
+- `:symmetricOrus`, `:symmetricNishino`: grow all directions together;
+  return a tuple of four full singular-value vectors.
+- `:directionalOrus`, `:directionalNishino`: sweep right, down, left, up;
+  return a vector of four full left singular-vector matrices.
+- `:directionalCorboz`: sweep right, down, left, up;
+  return a vector of four full singular-value vectors.
+
+Growth mutates the input. Always keep the returned state, because directional
+sweeps also create rotated state containers. Initialize all tensors first,
+with equal local leg dimensions and compatible boundary dimensions.
+An unsupported method raises an error.
+
+This performs one step without a convergence test or normalization. Call
+[`make_finite2`](@ref) after each step and [`calc_env`](@ref) before
+measurements; the cached environment is not refreshed automatically.
+"""
 function iterate_ctmrg(net::peps,method)
     if method==:symmetricOrus || method==:symmetricNishino
          vals=extend_symmetric(net,method)
@@ -279,6 +344,14 @@ function iterate_ctmrg(net::peps,method)
     end
 end
 
+"""
+    extend_up(net::peps, method) -> (net, diagnostics)
+
+Grow the upper boundary through rotations and a left update. Accepts the
+directional methods of [`iterate_ctmrg`](@ref), with the same per-direction
+diagnostics. Keep the returned state; normalization and environment refresh
+are separate. Internal helper.
+"""
 function extend_up(net::peps,method)
     net2=rotate_left(net)
     if method==:directionalCorboz
@@ -292,6 +365,14 @@ function extend_up(net::peps,method)
     return net3,values
 end
 
+"""
+    extend_right(net::peps, method) -> (net, diagnostics)
+
+Grow the right boundary through rotations and a left update. Accepts the
+directional methods of [`iterate_ctmrg`](@ref), with the same per-direction
+diagnostics. Keep the returned state; normalization and environment refresh
+are separate. Internal helper.
+"""
 function extend_right(net::peps,method)
     net2=rotate_left(net)
     net2=rotate_left(net2)
@@ -305,6 +386,14 @@ function extend_right(net::peps,method)
     return net3,values
 end
 
+"""
+    extend_down(net::peps, method) -> (net, diagnostics)
+
+Grow the lower boundary through rotations and a left update. Accepts the
+directional methods of [`iterate_ctmrg`](@ref), with the same per-direction
+diagnostics. Keep the returned state; normalization and environment refresh
+are separate. Internal helper.
+"""
 function extend_down(net::peps,method)
     net2=rotate_left(net)
     net2=rotate_left(net2)
@@ -319,10 +408,29 @@ function extend_down(net::peps,method)
 end
 
 
+"""
+    calc_env(net::peps) -> ITensor
+
+Contract all four corners and edges, assign the result to `net.env`, and
+return it. Its open indices are `net.i[1:4]`, ready to contract with `net.A`
+or an observable insertion. Refresh after initialization, growth, or
+normalization, before [`average`](@ref), [`partition_function`](@ref),
+[`free_energy`](@ref), [`corr_function`](@ref), or
+[`sample_configuration`](@ref).
+"""
 function calc_env(net::peps)
     net.env = ((net.C[1]*net.E[1])*(net.C[2]*net.E[2]))*((net.C[3]*net.E[3])*(net.C[4]*net.E[4]))
 end
 
+"""
+    make_finite2(net::peps) -> scales
+
+Divide each corner and edge in place by its largest absolute entry. Return
+the eight divisors in order `[C1, E1, C2, E2, C3, E3, C4, E4]`.
+Tensors must have finite entries and nonzero maxima; zero tensors are not
+guarded against. Does not change `net.A` or refresh `net.env`.
+Call [`calc_env`](@ref) afterwards when measurements are needed.
+"""
 function make_finite2(net::peps)
     # calc_env(net)
     maxVal=[]
