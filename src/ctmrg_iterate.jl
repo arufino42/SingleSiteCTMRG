@@ -129,10 +129,10 @@ function extend_symmetric(net::peps,method)
     gamma2=Index(bL,tags="gamma2")
     gamma3=Index(bL,tags="gamma3")
     gamma4=Index(bL,tags="gamma4")
-    @cast rU1[x,j,g]:= U1[(x,j),g] x:b, j:d
-    @cast rU2[x,j,g]:= U2[(x,j),g] x:b, j:d
-    @cast rU3[x,j,g]:= U3[(x,j),g] x:b, j:d
-    @cast rU4[x,j,g]:= U4[(x,j),g] x:b, j:d
+    @cast rU1[x,j,g]:= U1[(x,j),g] x in 1:b, j in 1:d
+    @cast rU2[x,j,g]:= U2[(x,j),g] x in 1:b, j in 1:d
+    @cast rU3[x,j,g]:= U3[(x,j),g] x in 1:b, j in 1:d
+    @cast rU4[x,j,g]:= U4[(x,j),g] x in 1:b, j in 1:d
     tU1=ITensor(rU1,net.alpha[2],net.i[2],gamma1)
     tU1d=ITensor(conj.(rU1),net.alpha[1],net.i[4],gamma1')
     tU2=ITensor(rU2,net.beta[3],net.i[3],gamma2)
@@ -211,8 +211,8 @@ function extend_left_corboz(net::peps,method)
     bL=size(P1,2)
     gamma1=Index(bL,tags="gamma1")
     gamma2=Index(bL,tags="gamma2")
-    @cast rP1[x,j,g]:= P1[(x,j),g] x:b, j:d
-    @cast rP2[g,x,j]:= P2[g,(x,j)] x:b, j:d
+    @cast rP1[x,j,g]:= P1[(x,j),g] x in 1:b, j in 1:d
+    @cast rP2[g,x,j]:= P2[g,(x,j)] x in 1:b, j in 1:d
     tP1=ITensor(rP1,net.beta[1],net.i[1],gamma1)
     tP1d=ITensor(rP1,net.beta[4],net.i[3],gamma2)
     tP2=ITensor(rP2,gamma2,net.beta[4],net.i[3])
@@ -258,9 +258,7 @@ function rotate_left(net1::peps)
     net2.i[3]=net1.i[4]
     net2.i[4]=net1.i[1]
     net2.A=net1.A
-    net2.M=net1.M
     net2.env=net1.env
-    net2.entropy=net1.entropy
     return net2
 end
 
@@ -296,9 +294,7 @@ function vertical_reflection(net1::peps)
     net2.i[3]=net1.i[3]
     net2.i[4]=net1.i[2]
     net2.A=net1.A
-    net2.M=net1.M
     net2.env=net1.env
-    net2.entropy=net1.entropy
     return net2
 end
 
@@ -322,7 +318,7 @@ with equal local leg dimensions and compatible boundary dimensions.
 An unsupported method raises an error.
 
 This performs one step without a convergence test or normalization. Call
-[`make_finite2`](@ref) after each step and [`calc_env`](@ref) before
+[`make_finite`](@ref) after each step and [`calc_env`](@ref) before
 measurements; the cached environment is not refreshed automatically.
 """
 function iterate_ctmrg(net::peps,method)
@@ -423,7 +419,7 @@ function calc_env(net::peps)
 end
 
 """
-    make_finite2(net::peps) -> scales
+    make_finite(net::peps) -> scales
 
 Divide each corner and edge in place by its largest absolute entry. Return
 the eight divisors in order `[C1, E1, C2, E2, C3, E3, C4, E4]`.
@@ -431,7 +427,7 @@ Tensors must have finite entries and nonzero maxima; zero tensors are not
 guarded against. Does not change `net.A` or refresh `net.env`.
 Call [`calc_env`](@ref) afterwards when measurements are needed.
 """
-function make_finite2(net::peps)
+function make_finite(net::peps)
     # calc_env(net)
     maxVal=[]
     for i=1:4

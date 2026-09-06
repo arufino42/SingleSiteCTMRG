@@ -3,7 +3,7 @@
 
 Single-site corner transfer matrix renormalization group (CTMRG) with ITensors.
 Initialize a [`peps`](@ref), grow it with [`iterate_ctmrg`](@ref), normalize
-with [`make_finite2`](@ref), and refresh [`calc_env`](@ref) before measuring
+with [`make_finite`](@ref), and refresh [`calc_env`](@ref) before measuring
 observables. Model tensors and convergence checks are supplied by the caller.
 See the README for a complete example and the tensor index convention.
 """
@@ -19,7 +19,7 @@ using KrylovKit
 using Dates
 using TensorCast
 
-export peps,make_finite2,calc_env,iterate_ctmrg,partition_function,free_energy,transfer_matrix_eigenvalues,corr_function,average,form_factors,sample_configuration
+export peps,make_finite,calc_env,iterate_ctmrg,partition_function,free_energy,transfer_matrix_eigenvalues,corr_function,average,form_factors,sample_configuration
 
 """
     peps
@@ -56,8 +56,6 @@ mutable struct peps
     beta::Array{Index}
     i
     env::Union{ITensor,Nothing}
-    M::Union{ITensor,Nothing}
-    entropy::Number
 end
 
 
@@ -71,7 +69,7 @@ calling CTMRG or observable routines. This does not build a model or choose
 boundary conditions.
 """
 function peps(chi::Int)
-    return peps(Array{ITensor}(undef,4),Array{ITensor}(undef,4),chi,ITensor(),Array{Index}(undef,4),Array{Index}(undef,4),Array{Index}(undef,4),nothing,nothing,0)
+    return peps(Array{ITensor}(undef,4),Array{ITensor}(undef,4),chi,ITensor(),Array{Index}(undef,4),Array{Index}(undef,4),Array{Index}(undef,4),nothing)
 end
 
 # Utilities

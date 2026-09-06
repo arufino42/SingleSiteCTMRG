@@ -2,3 +2,4 @@ Manifest.toml
 *.jl.cov
 *.jl.*.cov
 deps/build.log
+results
