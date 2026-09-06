@@ -1,6 +1,6 @@
 # SingleSiteCTMRG.jl
 
-SingleSiteCTMRG is a julia implementation the corner transfer matrix renormalization group (CTMRG) method for the approximate contraction of an infinite translationally invariant square tensor network.
+SingleSiteCTMRG is a julia implementation the corner transfer matrix renormalization group ([CTMRG](https://doi.org/10.1143/JPSJ.65.891)) method for the approximate contraction of an infinite translationally invariant square tensor network.
 It uses ITensors.jl to represent four corner tensors and four edge tensors,
 with a maximum environment bond dimension `chi`.
 
