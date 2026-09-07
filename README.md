@@ -49,10 +49,7 @@ C[4] -- E[3] -- C[3]
 | `E[4]` | `beta[4], beta[1], i[4]` |
 
 Connected tensors must share the same `Index` objects; matching dimensions
-and tags alone do not connect them. The growth routines assume equal local
-leg dimensions and compatible boundary dimensions. A uniform initial boundary
-dimension of one is sufficient for the example below; growth increases it up
-to the cutoff.
+and tags alone do not connect them.
 
 `peps(chi)` allocates an **uninitialized** container. All entries of `C`,
 `E`, `alpha`, `beta`, and `i`, as well as `A`, must be assigned before
@@ -91,9 +88,7 @@ returns those eight divisors. All boundary tensors must be nonzero.
 The observable tensor `O` has the same indices as `A` and includes the local
 statistical weights. Passing `A` itself to `average` gives one.
 
-`partition_function` depends on the current boundary normalization; it is not
-the infinite system's full partition function. `free_energy` computes
-`log(abs(z1*z2/(z3*z4)))`, canceling the corner and edge rescalings. It includes
+`free_energy` computes `log(abs(z1*z2/(z3*z4)))`, canceling the corner and edge rescalings. It includes
 neither the thermodynamic minus sign nor temperature. Multiply by `-T` and
 convert from tensor units to physical site units as appropriate. If you rescale
 the bulk tensor, restore its contribution separately.
@@ -120,22 +115,3 @@ provides the relevant methodological details:
   real-space correlations obtained from sampled configurations.
 - [Supplement S3](https://arxiv.org/html/2505.05889v2#S3a):
   bond-dimension dependence and the need to check increasing `chi`.
-
-The paper illustrates how CTMRG observables and snapshots reveal a sequence
-of topological plateaus. Its model-specific kagome tensors and analysis must
-be supplied separately; the example above demonstrates the library on a
-simpler model.
-
-When discussing this research use case, cite:
-
-```bibtex
-@article{Rufino2026Topological,
-  author  = {Rufino, Afonso and Nyckees, Samuel and Colbois, Jeanne and Mila, Frédéric},
-  title   = {Topological Devil's Staircase in a Constrained Kagome Ising Antiferromagnet},
-  journal = {Physical Review Letters},
-  volume  = {136},
-  pages   = {086701},
-  year    = {2026},
-  doi     = {10.1103/dgyr-5y75}
-}
-```
