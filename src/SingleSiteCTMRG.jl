@@ -18,8 +18,9 @@ using DelimitedFiles
 using KrylovKit
 using Dates
 using TensorCast
+using DataFrames
 
-export peps,make_finite,calc_env,iterate_ctmrg,partition_function,free_energy,transfer_matrix_eigenvalues,corr_function,average,form_factors,sample_configuration,entanglement_entropy
+export peps,make_finite,calc_env,iterate_ctmrg,partition_function,free_energy,transfer_matrix_eigenvalues,corr_function,average,form_factors,sample_configuration,entanglement_entropy,initialise_open_bc,run_ctmrg
 
 """
     peps
@@ -56,6 +57,7 @@ mutable struct peps
     beta::Array{Index}
     i
     env::Union{ITensor,Nothing}
+    ops::Dict{String,ITensor}
 end
 
 
@@ -69,11 +71,14 @@ calling CTMRG or observable routines. This does not build a model or choose
 boundary conditions.
 """
 function peps(chi::Int)
-    return peps(Array{ITensor}(undef,4),Array{ITensor}(undef,4),chi,ITensor(),Array{Index}(undef,4),Array{Index}(undef,4),Array{Index}(undef,4),nothing)
+    return peps(Array{ITensor}(undef,4),Array{ITensor}(undef,4),chi,ITensor(),Array{Index}(undef,4),Array{Index}(undef,4),Array{Index}(undef,4),nothing,Dict{String,ITensor}())
 end
 
 # Utilities
 include("utils.jl")
+
+# Initialisation
+include("initialise.jl")
 
 # Transfer-Matrix related functions
 include("transfer_matrix.jl")
@@ -86,5 +91,8 @@ include("observables.jl")
 
 # Code for sampling snapshots
 include("snapshots.jl")
+
+# Running CTMRG loop
+include("run.jl")
 
 end # module SingleSiteCTMRG
