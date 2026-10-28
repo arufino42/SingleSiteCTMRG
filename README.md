@@ -13,13 +13,13 @@ The CTMRG environment is saved in the `peps` variable which contains
 * `E`: vector with the four edge tensors.
 * `C`: vector with the four corner tensors.
 * `chi`: the cut-off dimension
-* `A`: the local tensor
+* `A`: the local tensor.
 * `alpha`,`beta` and `i`: ITensor `Index` objects for the indices in the environment.
-* `env`: ITensor with the contracted environment
+* `env`: ITensor with the contracted environment.
 * `ops`: Dictionary with all the observables one wishes to compute.
 
 # Running the code
 Once the local tensor `A` has been defined, CTMRG (with open boundary conditions) can be initialized using `net = peps(A,chi)`. To run CTMRG until convergence use the function `run_ctmrg`. 
 
 # Examples
-See `examples/square_ising.jl` and `examples/triangular_ising.jl` for examples of usage.
+See `examples/square_ising.jl` and `examples/triangular_ising_ctmrg.jl` (WIP) for examples of usage.
