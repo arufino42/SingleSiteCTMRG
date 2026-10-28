@@ -1,6 +1,8 @@
 using Revise
 using SingleSiteCTMRG
 using ITensors
+using DataFrames
+using Plots
 
 function S(a)
     return 3-2*a
@@ -28,12 +30,21 @@ function square_ising_local_tensor(T::Float64,J::Float64,h::Float64)
     return (A,ops)
 end
 
+function exactIsingM(T::Number)
+    beta=1/T
+    betac=log(1+sqrt(2))/2
+    return (beta>betac) ? (1-(sinh(2*beta))^(-4))^(1/8) : 0
+end
+
 Tc=1/(log(1+sqrt(2))/2)
-T=Tc-0.2
+vT= Tc-0.5:0.05:Tc+0.5
+
 J=-1.0
 h=0.0
 vchi=[10,20]
-(A,ops)=square_ising_local_tensor(T,J,h)
+
+
+
 if J<0
     bc=repeat([[1,0]],4)
 else
@@ -44,5 +55,28 @@ else
         [0,1]
     ]
 end
-net=peps(A,vchi[1];ops_in=ops,boundaryCondition=bc)
-out=run_ctmrg(net;vchi)
+
+
+df=DataFrame()
+for T in vT
+    # Initialising the local tensor, observables and environments
+    (A,ops)=square_ising_local_tensor(T,J,h)
+    net=peps(A,vchi[1];ops_in=ops,boundaryCondition=bc)
+
+    # Running CTMRG
+    out=run_ctmrg(net;vchi)
+    out.T .= T
+    append!(df,out,cols=:union)
+end
+
+sort!(df,:T)
+gdf=groupby(df,[:chi])
+
+
+# Plotting the magnetization
+p1=scatter(;xaxis="\$T\$",yaxis="\$m\$",legendtitle="\$\\chi\$")
+plot!(p1,exactIsingM,Tc-0.5,Tc+0.5;label="")
+for chi in vchi
+    scatter!(p1, gdf[(chi=chi,)].T,gdf[(chi=chi,)].m,label="$chi")
+end
+display(p1)
