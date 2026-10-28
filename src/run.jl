@@ -7,18 +7,15 @@ function run_ctmrg(curNet::peps;vchi=nothing,fTol=1e-3,Nmin=10,Nmax=100_000,verb
         curNet.chi=chi
         fTol=1e-13
         deltaF=2*fTol
-        e1=0
-        e2=0
         f1=0
         f2=0
         i=0
-        deltaE=NaN
         convF=Float64[]
         corr1=0
         corr2=0
         while (abs(deltaF)>fTol ) && i<Nmax  ||i<Nmin 
             i+=1
-            (curNet,cornerSvals)=iterate_ctmrg(curNet,method)
+            cornerSvals = iterate_ctmrg!(curNet,method)
             vecMax=make_finite(curNet)
             calc_env(curNet)
             z2=partition_function(curNet)
@@ -36,7 +33,6 @@ function run_ctmrg(curNet::peps;vchi=nothing,fTol=1e-3,Nmin=10,Nmax=100_000,verb
                 println("f = ", f2)
                 println("deltaF = ", deltaF)
                 println("z =",z2)
-                @show keys(curNet.ops)
                 for (name,op) in curNet.ops
                     av=average(curNet,op)
                     println("$name = ",av)

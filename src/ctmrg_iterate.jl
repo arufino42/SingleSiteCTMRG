@@ -170,7 +170,7 @@ environments. Mutates `net` and returns its full singular-value vector.
 Assumes compatible equal dimensions for reshaping; does not normalize tensors
 or refresh `net.env`. Internal helper for `:directionalCorboz`.
 """
-function extend_left_corboz(net::peps,method)
+function extend_left_corboz!(net::peps)
     d=dim(net.i[1])
     b=dim(net.beta[1])
     nc1=net.C[1]*net.E[1]*net.E[4]*net.A
@@ -217,49 +217,24 @@ function extend_left_corboz(net::peps,method)
     tP1d=ITensor(rP1,net.beta[4],net.i[3],gamma2)
     tP2=ITensor(rP2,gamma2,net.beta[4],net.i[3])
     tP2d=ITensor(rP2,gamma1,net.beta[1],net.i[1])
-    net2=net
-    net2.beta[1]=Index(bL,tags="beta1")
-    net2.beta[4]=Index(bL,tags="beta4")
-    net2.C[1]=replaceinds(net.C[1]*net.E[1]*tP1,[gamma1,net.alpha[2]],[net2.beta[1],net.alpha[1]])
-    net2.C[4]=replaceinds(net.C[4]*net.E[3]*tP2,[gamma2,net.alpha[3]],[net2.beta[4],net.alpha[4]])
-    net2.E[4]=replaceinds(net.E[4]*net.A*tP1d*tP2d,[gamma1,gamma2,net.i[2]],[net2.beta[1],net2.beta[4],net.i[4]])
+    net.beta[1]=Index(bL,tags="beta1")
+    net.beta[4]=Index(bL,tags="beta4")
+    net.C[1]=replaceinds(net.C[1]*net.E[1]*tP1,[gamma1,net.alpha[2]],[net.beta[1],net.alpha[1]])
+    net.C[4]=replaceinds(net.C[4]*net.E[3]*tP2,[gamma2,net.alpha[3]],[net.beta[4],net.alpha[4]])
+    net.E[4]=replaceinds(net.E[4]*net.A*tP1d*tP2d,[gamma1,gamma2,net.i[2]],[net.beta[1],net.beta[4],net.i[4]])
     return (net,vVals)
 end
 
 
-"""
-    rotate_left(net1::peps) -> peps
-
-Return a state with boundary and local-index labels rotated counterclockwise
-by a quarter turn: new directions `1:4` are old directions `(2, 3, 4, 1)`.
-Tensor objects are shared with `net1`; this is not a deep copy. The bulk
-tensor and cached fields are carried over. Internal helper.
-"""
-function rotate_left(net1::peps)
-    net2=peps(net1.chi)
-    net2.C[1]=net1.C[2]
-    net2.C[2]=net1.C[3]
-    net2.C[3]=net1.C[4]
-    net2.C[4]=net1.C[1]
-    net2.E[1]=net1.E[2]
-    net2.E[2]=net1.E[3]
-    net2.E[3]=net1.E[4]
-    net2.E[4]=net1.E[1]
-    net2.alpha[1]=net1.beta[2]
-    net2.alpha[2]=net1.beta[3]
-    net2.alpha[3]=net1.beta[4]
-    net2.alpha[4]=net1.beta[1]
-    net2.beta[1]=net1.alpha[2]
-    net2.beta[2]=net1.alpha[3]
-    net2.beta[3]=net1.alpha[4]
-    net2.beta[4]=net1.alpha[1]
-    net2.i[1]=net1.i[2]
-    net2.i[2]=net1.i[3]
-    net2.i[3]=net1.i[4]
-    net2.i[4]=net1.i[1]
-    net2.A=net1.A
-    net2.env=net1.env
-    return net2
+function rotate_left!(net::peps)
+    circshift!(net.C,-1)
+    circshift!(net.E,-1)
+    tmp = net.beta
+    net.beta=net.alpha
+    net.alpha=tmp
+    circshift!(net.alpha,-1)
+    circshift!(net.beta,-1)
+    circshift!(net.i,-1)
 end
 
 
@@ -321,87 +296,14 @@ This performs one step without a convergence test or normalization. Call
 [`make_finite`](@ref) after each step and [`calc_env`](@ref) before
 measurements; the cached environment is not refreshed automatically.
 """
-function iterate_ctmrg(net::peps,method)
-    if method==:symmetricOrus || method==:symmetricNishino
-         vals=extend_symmetric(net,method)
-         return (net,vals)
-    elseif method==:directionalOrus||method==:directionalNishino||method==:directionalCorboz
-        net,val1=extend_right(net,method)
-        net,val2=extend_down(net,method)
-        if method ==:directionalCorboz
-            net,val3=extend_left_corboz(net,method)
-        else
-            net,val3=extend_left(net,method)
-        end
-        net,val4=extend_up(net,method)
-        return (net,[val1,val2,val3,val4])
-    else
-        error("Unrecognized method")
+function iterate_ctmrg!(net::peps,method)
+    @assert method==:directionalCorboz
+    for k in 1:4    
+        extend_left_corboz!(net)    
+        rotate_left!(net)
     end
 end
 
-"""
-    extend_up(net::peps, method) -> (net, diagnostics)
-
-Grow the upper boundary through rotations and a left update. Accepts the
-directional methods of [`iterate_ctmrg`](@ref), with the same per-direction
-diagnostics. Keep the returned state; normalization and environment refresh
-are separate. Internal helper.
-"""
-function extend_up(net::peps,method)
-    net2=rotate_left(net)
-    if method==:directionalCorboz
-        (net3,values)=extend_left_corboz(net2,method)
-    else
-        (net3,values)=extend_left(net2,method)
-    end
-    net3=rotate_left(net3)
-    net3=rotate_left(net3)
-    net3=rotate_left(net3)
-    return net3,values
-end
-
-"""
-    extend_right(net::peps, method) -> (net, diagnostics)
-
-Grow the right boundary through rotations and a left update. Accepts the
-directional methods of [`iterate_ctmrg`](@ref), with the same per-direction
-diagnostics. Keep the returned state; normalization and environment refresh
-are separate. Internal helper.
-"""
-function extend_right(net::peps,method)
-    net2=rotate_left(net)
-    net2=rotate_left(net2)
-    if method==:directionalCorboz
-        (net3,values)=extend_left_corboz(net2,method)
-    else
-        (net3,values)=extend_left(net2,method)
-    end
-    net3=rotate_left(net3)
-    net3=rotate_left(net3)
-    return net3,values
-end
-
-"""
-    extend_down(net::peps, method) -> (net, diagnostics)
-
-Grow the lower boundary through rotations and a left update. Accepts the
-directional methods of [`iterate_ctmrg`](@ref), with the same per-direction
-diagnostics. Keep the returned state; normalization and environment refresh
-are separate. Internal helper.
-"""
-function extend_down(net::peps,method)
-    net2=rotate_left(net)
-    net2=rotate_left(net2)
-    net2=rotate_left(net2)
-    if method==:directionalCorboz
-        (net3,values)=extend_left_corboz(net2,method)
-    else
-        (net3,values)=extend_left(net2,method)
-    end
-    net3=rotate_left(net3)
-    return net3,values
-end
 
 
 """

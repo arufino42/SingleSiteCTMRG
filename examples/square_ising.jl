@@ -17,18 +17,32 @@ function square_ising_local_tensor(T::Float64,J::Float64,h::Float64)
     A=Array{Float64,4}(undef,2,2,2,2)
     ops=Dict{String,Any}()
     ops["e"]=Array{Float64,4}(undef,2,2,2,2)
+    ops["m"]=Array{Float64,4}(undef,2,2,2,2)
+    ops["m_stag"]=Array{Float64,4}(undef,2,2,2,2)
     for a1 in 1:2, a2 in 1:2, a3 in 1:2, a4 in 1:2
         A[a1,a2,a3,a4]=exp( -(E(a1,a2,a3,a4)-E0)/T) 
-        ops["e"][a1,a2,a3,a4]=E(a1,a2,a3,a4)*exp( -(E(a1,a2,a3,a4)-E0)/T) 
+        ops["e"][a1,a2,a3,a4]=E(a1,a2,a3,a4)/2*exp( -(E(a1,a2,a3,a4)-E0)/T)
+        ops["m"][a1,a2,a3,a4]=(S(a1)+S(a2)+S(a3)+S(a4))/4*exp( -(E(a1,a2,a3,a4)-E0)/T) 
+        ops["m_stag"][a1,a2,a3,a4]=(S(a1)-S(a2)+S(a3)-S(a4))/4*exp( -(E(a1,a2,a3,a4)-E0)/T) 
     end
     return (A,ops)
 end
 
 Tc=1/(log(1+sqrt(2))/2)
-T=Tc+0.1
+T=Tc-0.2
 J=-1.0
 h=0.0
 vchi=[10,20]
-(A,ops)=square_ising_local_tensor(Tc,J,h)
-net=peps(A,vchi[1];ops_in=ops)
+(A,ops)=square_ising_local_tensor(T,J,h)
+if J<0
+    bc=repeat([[1,0]],4)
+else
+    bc=[
+        [1,0],
+        [0,1],
+        [1,0],
+        [0,1]
+    ]
+end
+net=peps(A,vchi[1];ops_in=ops,boundaryCondition=bc)
 out=run_ctmrg(net;vchi)
