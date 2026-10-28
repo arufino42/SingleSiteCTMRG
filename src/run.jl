@@ -36,6 +36,7 @@ function run_ctmrg(curNet::peps;vchi=nothing,fTol=1e-3,Nmin=10,Nmax=100_000,verb
                 println("f = ", f2)
                 println("deltaF = ", deltaF)
                 println("z =",z2)
+                @show keys(curNet.ops)
                 for (name,op) in curNet.ops
                     av=average(curNet,op)
                     println("$name = ",av)
