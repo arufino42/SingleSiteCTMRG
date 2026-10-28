@@ -20,3 +20,6 @@ The CTMRG environment is saved in the `peps` variable which contains
 
 # Running the code
 Once the local tensor `A` has been defined, CTMRG (with open boundary conditions) can be initialized using `net = peps(A,chi)`. To run CTMRG until convergence use the function `run_ctmrg`. 
+
+# Examples
+See `examples/square_ising.jl` and `examples/triangular_ising.jl` for examples of usage.
