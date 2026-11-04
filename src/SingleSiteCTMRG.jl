@@ -19,8 +19,10 @@ using KrylovKit
 using Dates
 using TensorCast
 using DataFrames
+using Luxor
 
-export peps,make_finite,calc_env,iterate_ctmrg,partition_function,free_energy,transfer_matrix_eigenvalues,corr_function,average,form_factors,sample_configuration,entanglement_entropy,initialise_open_bc,run_ctmrg
+export peps,make_finite,calc_env,iterate_ctmrg,partition_function,free_energy,transfer_matrix_eigenvalues,corr_function,average,form_factors,sample_snapshots,entanglement_entropy,initialise_open_bc,run_ctmrg
+export draw_tile, draw_spin_configuration
 
 """
     peps
@@ -58,6 +60,7 @@ mutable struct peps
     i
     env::Union{ITensor,Nothing}
     ops::Dict{String,ITensor}
+    configurationDecomposition
 end
 
 
@@ -86,11 +89,14 @@ include("transfer_matrix.jl")
 # Heart of the CTMRG algorithm
 include("ctmrg_iterate.jl")
 
-# Code for calculating observables
+# Calculating observables
 include("observables.jl")
 
-# Code for sampling snapshots
+# Sampling snapshots
 include("snapshots.jl")
+
+# Drawing snapshots
+include("draw.jl")
 
 # Running CTMRG loop
 include("run.jl")

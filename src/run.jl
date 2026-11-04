@@ -1,11 +1,11 @@
-function run_ctmrg(curNet::peps;vchi=nothing,fTol=1e-3,Nmin=10,Nmax=100_000,verbose=true,corr_length=true,method=:directionalCorboz)
+function run_ctmrg(curNet::peps;vchi=nothing,fTol=1e-11,Nmin=10,Nmax=100_000,verbose=true,corr_length=true,method=:directionalCorboz)
     df=DataFrame()
     if vchi === nothing
         vchi=[curNet.chi]
     end
     for chi in vchi
         curNet.chi=chi
-        fTol=1e-13
+        
         deltaF=2*fTol
         f1=0
         f2=0

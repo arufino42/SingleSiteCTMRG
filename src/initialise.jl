@@ -1,10 +1,23 @@
 ```
     Function that initializes the CTMRG environment. If no boundaryCondition is given, "Open" boundary conditions are used, where the outside indices are summed over. A tuple of 4 vectors can also be given, which define the boundary condition in each of the 4 directions.
 ```
-function peps(A_in::Array{Float64,4},chi::Int;ops_in=Dict{String,Any}(),boundaryCondition="Open")
+function peps(A_in::Array{Float64,4},chi::Int;ops_in=Dict{String,Any}(),boundaryCondition="Open",configurationDecomposition=nothing)
     d=size(A_in)[1]
     i=[Index(d) for k in 1:4]
     A=ITensor(A_in,i)
+    if configurationDecomposition !== nothing
+        confDecomp=[
+            [
+            ITensor(configurationDecomposition[j][k],i[j])
+            for k in 1:length(configurationDecomposition[1])   
+            ]
+        for j in 1:4
+        ]
+    else
+        confDecomp=nothing
+    end
+    
+
     ops=Dict{String,ITensor}()
     for (name,op) in ops_in
         ops[name]=ITensor(op,i...)
@@ -44,5 +57,5 @@ function peps(A_in::Array{Float64,4},chi::Int;ops_in=Dict{String,Any}(),boundary
             E[4][beta[1]=>i1,inds(A)[4]=>i2,beta[4]=>i3]  +=A[i1,i2,i3,i4]*bc[4][i4]
         end
     end
-    return peps(E,C,chi,A,alpha,beta,i,nothing,ops)
+    return peps(E,C,chi,A,alpha,beta,i,nothing,ops,confDecomp)
 end

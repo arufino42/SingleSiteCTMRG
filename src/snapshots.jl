@@ -199,7 +199,7 @@ requires probabilities to sum to one within `1e-6`.
 See Sec. S1, Eqs. (S1)-(S2), of the supplementary information to
 [Rufino et al. (2026)](https://arxiv.org/html/2505.05889v2#S1a).
 """
-function sample_configuration(curNet::peps,Lx,Ly,proj_U,proj_R,proj_D,proj_L)
+function sample_configuration(curNet::peps,Lx,Ly,proj_U,proj_R,proj_D,proj_L;verbose=true)
     rand_conf=Array{Int,2}(undef,Lx,Ly)
     first_row=snapshot_first_row(curNet,proj_U,proj_R,proj_D,proj_L,Lx)
     rand_conf[:,1]=first_row
@@ -207,8 +207,11 @@ function sample_configuration(curNet::peps,Lx,Ly,proj_U,proj_R,proj_D,proj_L)
     Bt=Bt/maximum(Bt)
     prev_row=first_row
     for y=2:Ly
-        @show y  
-        @time next_row=snapshot_next_row(curNet,prev_row,Bt,proj_U,proj_R,proj_D,proj_L)
+        if verbose
+            println("Currently sampling row y = $y")
+        end
+        # @show y  
+        next_row=snapshot_next_row(curNet,prev_row,Bt,proj_U,proj_R,proj_D,proj_L)
         rand_conf[:,y]=next_row
         Bt=Bt*curNet.E[4]*proj_L[next_row[1]]*curNet.E[2]*proj_R[next_row[Lx]]
         Bt=replaceinds(Bt,[curNet.beta[4],curNet.beta[3]],[curNet.beta[1],curNet.beta[2]])
@@ -216,4 +219,24 @@ function sample_configuration(curNet::peps,Lx,Ly,proj_U,proj_R,proj_D,proj_L)
         prev_row=next_row
     end
     return rand_conf
+end
+
+
+function sample_snapshots(net::peps,Lx::Int,Ly::Int;N=10,verbose=true)
+    if net.configurationDecomposition === nothing
+        error("In order to sample snapshots, a configurationDecomposition must be defined during initialisation.")
+    end
+    out=[]
+    while length(out)<N
+        if verbose
+            println("Number of configurations sampled so far: ($(length(out))/$N)")
+        end
+        # try
+            conf=sample_configuration(net,Lx,Ly,net.configurationDecomposition...;verbose)
+            push!(out,conf)
+        # catch
+        #     continue
+        # end
+    end
+    return out
 end
