@@ -24,9 +24,8 @@ Once the local tensor `A` has been defined, CTMRG (with open boundary conditions
 # Sampling of system snapshots
 This package can also be used to sample system snapshots according to the probability distribution defined by the Gibbs distribution. To do so, a `configurationDecomposition` must be given as a keyword argument in the initialization of `peps`. A `configurationDecomposition` is a vector containing $\{U(k),R(k),D(k),L(k)\}$ such that 
 
-\(
- A_{i_1,i_2,i_3,i_4}= \sum_k U(k)_{i_1} R(k)_{i_2} D(k)_{i_3} L(k)_{i_4},
-\)
+
+$$A_{i_1,i_2,i_3,i_4}= \sum_k U(k)_{i_1} R(k)_{i_2} D(k)_{i_3} L(k)_{i_4},$$
 
 where $\sum k$ runs through all possible local configurations for a tensor (for instance, if every tensor accounts for a cluster of 4 sites we'd have $k\in \{1,\dots,16\}$, as in the Ising example). Then run `sample_snapshots` in the desired rectangular region.
 
