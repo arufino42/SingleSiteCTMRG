@@ -6,7 +6,7 @@ It uses ITensors.jl to represent four corner tensors and four edge tensors, with
 # Installing the package
 In order to install the package in julia, run
 
-``using Pkg; Pkg.develop(url="https://github.com/arufino42/SingleSiteCTMRG")``.
+``using Pkg; Pkg.add(url="https://github.com/arufino42/SingleSiteCTMRG")``.
 
 # Internal representation
 The CTMRG environment is saved in the `peps` variable which contains
