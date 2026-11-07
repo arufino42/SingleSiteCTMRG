@@ -10,7 +10,6 @@ See the README for a complete example and the tensor index convention.
 module SingleSiteCTMRG
 
 using Printf
-using Statistics
 using ITensors
 using LinearAlgebra
 using GenericLinearAlgebra
