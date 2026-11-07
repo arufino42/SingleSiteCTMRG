@@ -28,7 +28,6 @@ function draw_spin_configuration(filename::String, conf::Matrix{Int}, lattice_ve
     Lx, Ly = Base.size(conf)
     a1, a2 = lattice_vectors
 
-    # Choose a circle radius smaller than the spacing between sites.
     spacing = min(norm(a1), norm(a2))
     for i in eachindex(sites), j in 1:i-1
         distance = norm(sites[i] .- sites[j])
@@ -38,7 +37,6 @@ function draw_spin_configuration(filename::String, conf::Matrix{Int}, lattice_ve
     end
     radius = 0.4*spacing
 
-    # The outermost clusters contain all the coordinate extrema.
     positions = [(x - 1) .* a1 .+ (y - 1) .* a2 .+ site
                  for x in (1, Lx), y in (1, Ly), site in sites]
     xmin, xmax = extrema(p[1] for p in positions)

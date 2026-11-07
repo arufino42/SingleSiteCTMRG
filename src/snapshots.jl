@@ -199,9 +199,11 @@ requires probabilities to sum to one within `1e-6`.
 See Sec. S1, Eqs. (S1)-(S2), of the supplementary information to
 [Rufino et al. (2026)](https://arxiv.org/html/2505.05889v2#S1a).
 """
-function sample_configuration(curNet::peps,Lx,Ly,proj_U,proj_R,proj_D,proj_L;verbose=true)
+function sample_configuration(curNet::peps,Lx,Ly,proj_U,proj_R,proj_D,proj_L;verbose=true,first_row=[])
     rand_conf=Array{Int,2}(undef,Lx,Ly)
-    first_row=snapshot_first_row(curNet,proj_U,proj_R,proj_D,proj_L,Lx)
+    if first_row==[]
+        first_row=snapshot_first_row(curNet,proj_U,proj_R,proj_D,proj_L,Lx)
+    end
     rand_conf[:,1]=first_row
     Bt=initialise_Bt(curNet,first_row,proj_U,proj_R,proj_D,proj_L)
     Bt=Bt/maximum(Bt)
@@ -222,7 +224,7 @@ function sample_configuration(curNet::peps,Lx,Ly,proj_U,proj_R,proj_D,proj_L;ver
 end
 
 
-function sample_snapshots(net::peps,Lx::Int,Ly::Int;N=10,verbose=true)
+function sample_snapshots(net::peps,Lx::Int,Ly::Int;N=10,verbose=true,first_row=[])
     if net.configurationDecomposition === nothing
         error("In order to sample snapshots, a configurationDecomposition must be defined during initialisation.")
     end
@@ -232,7 +234,7 @@ function sample_snapshots(net::peps,Lx::Int,Ly::Int;N=10,verbose=true)
             println("Number of configurations sampled so far: ($(length(out))/$N)")
         end
         # try
-            conf=sample_configuration(net,Lx,Ly,net.configurationDecomposition...;verbose)
+            conf=sample_configuration(net,Lx,Ly,net.configurationDecomposition...;verbose,first_row)
             push!(out,conf)
         # catch
         #     continue

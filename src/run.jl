@@ -1,4 +1,4 @@
-function run_ctmrg(curNet::peps;vchi=nothing,fTol=1e-11,Nmin=10,Nmax=100_000,verbose=true,corr_length=true,method=:directionalCorboz)
+function run_ctmrg(curNet::peps;vchi=nothing,fTol=1e-11,Nmin=10,Nmax=100_000,verbose=true,corr_length=true,method=:directionalCorboz,savefile="")
     df=DataFrame()
     if vchi === nothing
         vchi=[curNet.chi]
@@ -64,6 +64,9 @@ function run_ctmrg(curNet::peps;vchi=nothing,fTol=1e-11,Nmin=10,Nmax=100_000,ver
             dataPoint["vals"]=vals
         end
         push!(df,dataPoint,cols=:union)
+    end
+    if savefile!=""
+        save_object(savefile,df)
     end
     return df
 end
