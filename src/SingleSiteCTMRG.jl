@@ -73,7 +73,7 @@ calling CTMRG or observable routines. This does not build a model or choose
 boundary conditions.
 """
 function peps(chi::Int)
-    return peps(Array{ITensor}(undef,4),Array{ITensor}(undef,4),chi,ITensor(),Array{Index}(undef,4),Array{Index}(undef,4),Array{Index}(undef,4),nothing,Dict{String,ITensor}())
+    return peps(Array{ITensor}(undef,4),Array{ITensor}(undef,4),chi,ITensor(),Array{Index}(undef,4),Array{Index}(undef,4),Array{Index}(undef,4),nothing,Dict{String,ITensor}(),nothing)
 end
 
 # Utilities
