@@ -74,7 +74,12 @@ function run_ctmrg(curNet::peps;vchi=nothing,fTol=1e-11,Nmin=10,Nmax=100_000,ver
         end
         push!(df,dataPoint,cols=:union)
         if savefile != ""
-            save(joinpath(dirname(savefile),"net_"*basename(savefile)),"chi=$(chi)",curNet)
+            jldopen(joinpath(dirname(savefile), "net_" * basename(savefile)), "a+") do f
+                key = "chi=$(chi)"
+                if !haskey(f, key)
+                    f[key] = curNet
+                end
+            end
         end
     end
     if savefile!=""
