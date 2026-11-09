@@ -38,11 +38,15 @@ function run_ctmrg(curNet::peps;vchi=nothing,fTol=1e-11,Nmin=10,Nmax=100_000,ver
                     println("$name = ",av)
                 end
                 if corr_length
-                    vals,vecs =transfer_matrix_eigenvalues(curNet,15)
-                    corr2=1/log(abs(vals[1]/vals[2]))
-                    deltaCorr=corr2-corr1
-                    corr1=corr2
-                    println("corr = ",corr2) 
+                    try
+                        vals,vecs =transfer_matrix_eigenvalues(curNet,15)
+                        corr2=1/log(abs(vals[1]/vals[2]))
+                        deltaCorr=corr2-corr1
+                        corr1=corr2
+                        println("corr = ",corr2) 
+                    catch
+                        @warn "Couldn't compute correlation length."
+                    end
                 end
                 
             end
@@ -58,15 +62,23 @@ function run_ctmrg(curNet::peps;vchi=nothing,fTol=1e-11,Nmin=10,Nmax=100_000,ver
             dataPoint[name]=av
         end
         if corr_length
-            vals,vecs =transfer_matrix_eigenvalues(curNet,15)
-            corr2=1/log(abs(vals[1]/vals[2]))
-            dataPoint["corr"]=corr2
-            dataPoint["vals"]=vals
+            try
+                vals,vecs =transfer_matrix_eigenvalues(curNet,15)
+                corr2=1/log(abs(vals[1]/vals[2]))
+                dataPoint["corr"]=corr2
+                dataPoint["vals"]=vals    
+            catch
+                @warn "Couldn't compute correlation length."
+            end
+            
         end
         push!(df,dataPoint,cols=:union)
+        if savefile != ""
+            save(joinpath(dirname(savefile),"net_"*basename(savefile)),"chi=$(chi)",curNet)
+        end
     end
     if savefile!=""
-        save_object(savefile,df)
+        save_object(joinpath(dirname(savefile),"data_"*basename(savefile)),df)
     end
     return df
 end
