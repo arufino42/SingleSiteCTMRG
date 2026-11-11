@@ -208,7 +208,9 @@ function sample_configuration(curNet::peps,Lx,Ly,proj_U,proj_R,proj_D,proj_L;ver
     Bt=Bt/maximum(Bt)
     prev_row=first_row
     for y=2:Ly
-        # @show y  
+        if verbose
+            println("Sampling row $y.")  
+        end
         next_row=snapshot_next_row(curNet,prev_row,Bt,proj_U,proj_R,proj_D,proj_L)
         rand_conf[:,y]=next_row
         Bt=Bt*curNet.E[4]*proj_L[next_row[1]]*curNet.E[2]*proj_R[next_row[Lx]]
