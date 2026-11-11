@@ -235,6 +235,9 @@ function rotate_left!(net::peps)
     circshift!(net.alpha,-1)
     circshift!(net.beta,-1)
     circshift!(net.i,-1)
+    if !isnothing(net.configurationDecomposition) 
+        circshift!(net.configurationDecomposition,-1)
+    end
 end
 
 

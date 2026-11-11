@@ -37,22 +37,21 @@ Sample the first row of `Lx >= 1` configuration labels from left to right,
 starting with the cached environment. Projector lists follow
 [`sample_configuration`](@ref). Requires current `net.env`. Internal helper.
 """
-function snapshot_first_row(net::peps,proj_U,proj_R,proj_D,proj_L,Lx)
+function snapshot_first_row(net::peps,proj_U,proj_R,proj_D,proj_L,Lx;first_cell=-1)
     row_config=[]
     vProb=Float64[]
     norm=(net.env*net.A)[]
     n_confs=length(proj_U)
 
-    for k=1:n_confs
-        if false && sum(proj_U[k])==0
-            push!(vProb,0)
-        else
-            # @show k
+    if first_cell<=0  
+        for k=1:n_confs
             prob=(net.env*proj_U[k]*proj_R[k]*proj_D[k]*proj_L[k])[]
             push!(vProb,prob/norm)
         end
+        random_tile=sample(vProb)[1]
+    else
+        random_tile=first_cell
     end
-    random_tile=sample(vProb)[1]
     push!(row_config,random_tile)
     A_U=net.C[1]*net.E[1]*proj_U[row_config[1]]
     A_U=replaceind(A_U,net.alpha[2],net.alpha[1])
@@ -199,10 +198,10 @@ requires probabilities to sum to one within `1e-6`.
 See Sec. S1, Eqs. (S1)-(S2), of the supplementary information to
 [Rufino et al. (2026)](https://arxiv.org/html/2505.05889v2#S1a).
 """
-function sample_configuration(curNet::peps,Lx,Ly,proj_U,proj_R,proj_D,proj_L;verbose=true,first_row=[])
+function sample_configuration(curNet::peps,Lx,Ly,proj_U,proj_R,proj_D,proj_L;verbose=true,first_row=[],first_cell=-1)
     rand_conf=Array{Int,2}(undef,Lx,Ly)
     if first_row==[]
-        first_row=snapshot_first_row(curNet,proj_U,proj_R,proj_D,proj_L,Lx)
+        first_row=snapshot_first_row(curNet,proj_U,proj_R,proj_D,proj_L,Lx;first_cell)
     end
     rand_conf[:,1]=first_row
     Bt=initialise_Bt(curNet,first_row,proj_U,proj_R,proj_D,proj_L)
@@ -221,7 +220,7 @@ function sample_configuration(curNet::peps,Lx,Ly,proj_U,proj_R,proj_D,proj_L;ver
 end
 
 
-function sample_snapshots(net::peps,Lx::Int,Ly::Int;N=10,verbose=true,first_row=[])
+function sample_snapshots(net::peps,Lx::Int,Ly::Int;N=10,verbose=true,first_row=[],first_cell=-1)
     if net.configurationDecomposition === nothing
         error("In order to sample snapshots, a configurationDecomposition must be defined during initialisation.")
     end
@@ -231,7 +230,7 @@ function sample_snapshots(net::peps,Lx::Int,Ly::Int;N=10,verbose=true,first_row=
             println("Number of configurations sampled so far: ($(length(out))/$N)")
         end
         # try
-            conf=sample_configuration(net,Lx,Ly,net.configurationDecomposition...;verbose,first_row)
+            conf=sample_configuration(net,Lx,Ly,net.configurationDecomposition...;verbose,first_row,first_cell)
             push!(out,conf)
         # catch
         #     continue
